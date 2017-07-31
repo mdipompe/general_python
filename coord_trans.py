@@ -21,21 +21,21 @@ def pol2cart(theta, rho, degree=False):
 def cart2sph(x, y, z, degree=False):
     hxy = np.hypot(x, y)
     r = np.hypot(hxy, z)
-    el = np.arctan2(z, hxy)
-    az = np.arctan2(y, x)
+    theta = np.arctan2(z, hxy)
+    phi = np.arctan2(y, x)
     if degree:
-        el = el * (180./np.pi)
-        az = az * (180./np.pi)
-    return az, el, r
+        theta = theta * (180./np.pi)
+        phi = phi * (180./np.pi)
+    return r, theta, phi
 
-def sph2cart(az, el, r, degree=False):
+def sph2cart(r, theta, phi, degree=False):
     if degree:
-        az = az * (np.pi/180.)
-        el = el * (np.pi/180.)
-    rcos_theta = r * np.cos(el)
-    x = rcos_theta * np.cos(az)
-    y = rcos_theta * np.sin(az)
-    z = r * np.sin(el)
+        phi = phi * (np.pi/180.)
+        theta = theta * (np.pi/180.)
+    rcos_theta = r * np.cos(theta)
+    x = rcos_theta * np.cos(phi)
+    y = rcos_theta * np.sin(phi)
+    z = r * np.sin(theta)
     return x, y, z
 
 def cart2cyl(x, y, z, degree=False):
