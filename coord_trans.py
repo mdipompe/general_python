@@ -1,6 +1,12 @@
 '''
 Basic transformations between cartesian, polar, and spherical coordinates.
-If degree is True, inputs are assumed to be in degrees and outputs will be as well
+If degree is True, inputs are assumed to be in degrees and outputs 
+will be as well. 
+Parameter orders are:
+Cartesian: x, y, z
+Polar: r, theta
+Spherical: r, theta (altitude), phi (azimuth)
+Cylindrical: rho, phi, z
 '''
 import numpy as np
 
@@ -9,9 +15,9 @@ def cart2pol(x, y, degree=False):
     rho = np.hypot(x, y)
     if degree:
         theta = theta * (180./np.pi)
-    return theta, rho
+    return rho, theta
 
-def pol2cart(theta, rho, degree=False):
+def pol2cart(rho, theta, degree=False):
     if degree:
         theta = theta * (np.pi/180.)
     x = rho * np.cos(theta)
