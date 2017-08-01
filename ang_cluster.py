@@ -69,7 +69,7 @@ def ang_cluster(data,rand,bins,
 
     #MAD Put data on unit sphere (r=1), convert to x,y,z
     data_r=np.ones(len(data.data))
-    dx,dy,dz=ct.sph2cart(data_r, data.data['ra'], data.data['dec'])
+    dx,dy,dz=ct.sph2cart(data_r, data.data['ra'], data.data['dec'], degree=True)
     dataxyz=np.array([dx,dy,dz]).transpose()
     
     #MAD If input randoms is a filename, read it in
@@ -78,7 +78,7 @@ def ang_cluster(data,rand,bins,
 
     #MAD Put randoms on unit sphere, convert to x,y,z
     rand_r=np.ones(len(rand.data))
-    rx,ry,rz=ct.sph2cart(rand_r, rand.data['ra'], rand.data['dec'])   
+    rx,ry,rz=ct.sph2cart(rand_r, rand.data['ra'], rand.data['dec'], degree=True)   
     randxyz=np.array([rx,ry,rz]).transpose()
 
     #MAD If error hasn't been set, construct tree without fields
@@ -117,7 +117,7 @@ def ang_cluster(data,rand,bins,
         fig = plt.figure(figsize=(8,5))
         ax=fig.add_subplot(1,1,1)
         pltcorr, = ax.plot(bincents,results.estimate(),'o',color='black',markersize=5)
-        pltline, = ax.plot(bincents,results.estimate(),'--',color='grey')
+#        pltline, = ax.plot(bincents,results.estimate(),'--',color='grey')
         if error:
             ax.errorbar(bincents,results.estimate(),yerr=results.error(),fmt='none',ecolor='black', capsize=3)
         ax.set_xscale('log')

@@ -32,9 +32,9 @@ def cart2sph(x, y, z, degree=False):
     if degree:
         theta = theta * (180./np.pi)
         phi = phi * (180./np.pi)
-    return r, theta, phi
+    return r, phi, theta
 
-def sph2cart(r, theta, phi, degree=False):
+def sph2cart(r, phi, theta, degree=False):
     if degree:
         phi = phi * (np.pi/180.)
         theta = theta * (np.pi/180.)
@@ -72,9 +72,9 @@ def cyl2sph(rho, phi, z, degree=False):
     theta = np.arctan2(z,rho)
     if degree:
         theta = theta * (180./np.pi)
-    return r, theta, phi
+    return r, phi, theta
 
-def sph2cyl(r, theta, phi, degree=False):
+def sph2cyl(r, phi, theta, degree=False):
     if degree:
         theta = theta * (np.pi/180.)
         phi = phi * (np.pi/180.)
