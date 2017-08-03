@@ -21,8 +21,8 @@ def ang_cluster(data,rand,bins,
 
     :param data:
         The data for the measurement - can be either a string name of a
-        fits table, or the data already read in. Needs columns 'RA', 'Dec'.
-        Also needs column 'reg' if doing a jackknife or field to field
+        fits table, or the data already read in. Needs keys 'RA', 'Dec'.
+        Also needs key 'reg' if doing a jackknife or field to field
         error estimate
 
     :param rand:
@@ -66,19 +66,21 @@ def ang_cluster(data,rand,bins,
     #MAD If input data is a filename, read it in
     if type(data) is str:
         data=fits.open(data)[1]
-
+        data=data.data
+        
     #MAD Put data on unit sphere (r=1), convert to x,y,z
-    data_r=np.ones(len(data.data))
-    dx,dy,dz=ct.sph2cart(data_r, data.data['ra'], data.data['dec'], degree=True)
+    data_r=np.ones(len(data))
+    dx,dy,dz=ct.sph2cart(data_r, data['ra'], data['dec'], degree=True)
     dataxyz=np.array([dx,dy,dz]).transpose()
     
     #MAD If input randoms is a filename, read it in
     if type(rand) is str:
         rand=fits.open(rand)[1]
+        rand=rand.data
 
     #MAD Put randoms on unit sphere, convert to x,y,z
-    rand_r=np.ones(len(rand.data))
-    rx,ry,rz=ct.sph2cart(rand_r, rand.data['ra'], rand.data['dec'], degree=True)   
+    rand_r=np.ones(len(rand))
+    rx,ry,rz=ct.sph2cart(rand_r, rand['ra'], rand['dec'], degree=True)   
     randxyz=np.array([rx,ry,rz]).transpose()
 
     #MAD If error hasn't been set, construct tree without fields
