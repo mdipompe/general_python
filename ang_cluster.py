@@ -91,9 +91,9 @@ def ang_cluster(data,rand,bins,
 
     #MAD If error is set, use "reg" column of input to construct tree with fields
     if error:
-        if 'REG' in data.data.columns.names:
-            d_fields=np.array(data.data['reg'])
-            r_fields=np.array(rand.data['reg'])
+        if 'REG' in data.columns.names:
+            d_fields=np.array(data['reg'])
+            r_fields=np.array(rand['reg'])
             dtree = twopoint.clustering.tree(dataxyz, d_fields.astype('int'))
             rtree = twopoint.clustering.tree(randxyz, r_fields.astype('int'))
 
