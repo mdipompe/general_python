@@ -1,23 +1,39 @@
 import twopoint
 import numpy as np
-import coord_trans as ct
 from astropy.io import fits
-from log_bins import log_bins
 import pdb
 import matplotlib.pyplot as plt
 from matplotlib import ticker
+import pidly
+import os
+import pdb
+
+'''
+Convert spherical to xyz coordinates
+'''
+def sph2cart(r, phi, theta, degree=False):
+    if degree:
+        phi = phi * (np.pi/180.)
+        theta = theta * (np.pi/180.)
+    rcos_theta = r * np.cos(theta)
+    x = rcos_theta * np.cos(phi)
+    y = rcos_theta * np.sin(phi)
+    z = r * np.sin(theta)
+    return x, y, z
+
 
 def ang_cluster(data,rand,bins,
                 data2=None,rand2=None,
                 estimator='landy-szalay',
                 error=None,
                 outfile=None,plot=False,bincents=None,
-                threads=4):
+                threads=4,
+                n=10,frac=0.05):
 
     """
     Wrapper for clustering-tree angular clustering code, (hopefully) 
     simplifying use. Also performs conversion of astronomical coordinates
-    to x,y,z.
+    to x,y,z, as well as slitting data into regions for error estimation.
 
     :param data:
         The data for the measurement - can be either a string name of a
@@ -61,6 +77,15 @@ def ang_cluster(data,rand,bins,
     
     :param threads: (optional)
         Number of CPU threads used by clustering-tree. Defaults to 4.
+
+    :param n: (optional)
+        If data need to be split by regions for error estimation, n is the number
+        of regions per side for the splitting (default n=10)
+
+    :param frac: (optional)
+        If data need to be split by regions for error estimation, frac is the fraction
+        of the random sample to use to calculate splits (default frac=0.05)
+
     """
     
     #MAD If input data is a filename, read it in
@@ -70,7 +95,7 @@ def ang_cluster(data,rand,bins,
         
     #MAD Put data on unit sphere (r=1), convert to x,y,z
     data_r=np.ones(len(data))
-    dx,dy,dz=ct.sph2cart(data_r, data['ra'], data['dec'], degree=True)
+    dx,dy,dz=sph2cart(data_r, data['ra'], data['dec'], degree=True)
     dataxyz=np.array([dx,dy,dz]).transpose()
     
     #MAD If input randoms is a filename, read it in
@@ -80,7 +105,7 @@ def ang_cluster(data,rand,bins,
 
     #MAD Put randoms on unit sphere, convert to x,y,z
     rand_r=np.ones(len(rand))
-    rx,ry,rz=ct.sph2cart(rand_r, rand['ra'], rand['dec'], degree=True)   
+    rx,ry,rz=sph2cart(rand_r, rand['ra'], rand['dec'], degree=True)   
     randxyz=np.array([rx,ry,rz]).transpose()
 
     #MAD If error hasn't been set, construct tree without fields
@@ -90,12 +115,34 @@ def ang_cluster(data,rand,bins,
         rtree = twopoint.clustering.tree(randxyz)
 
     #MAD If error is set, use "reg" column of input to construct tree with fields
+    #MAD IF reg column doesn't exist, call IDL code to make them
     if error:
-        if 'REG' in data.columns.names:
-            d_fields=np.array(data['reg'])
-            r_fields=np.array(rand['reg'])
-            dtree = twopoint.clustering.tree(dataxyz, d_fields.astype('int'))
-            rtree = twopoint.clustering.tree(randxyz, r_fields.astype('int'))
+        if (not 'REG' in data.names) or (not 'REG' in rand.names):
+            c1=fits.Column(name='RA', array=data['RA'], format='K')
+            c2=fits.Column(name='DEC', array=data['DEC'], format='K')
+            tmp1=fits.BinTableHDU.from_columns([c1,c2])
+            tmp1.writeto('data_tmp.fits')
+            c1=fits.Column(name='RA', array=rand['RA'], format='K')
+            c2=fits.Column(name='DEC', array=rand['DEC'], format='K')
+            tmp2=fits.BinTableHDU.from_columns([c1,c2])
+            tmp2.writeto('rand_tmp.fits')
+            idl = pidly.IDL()
+            idl.pro('split_regions_gen','data_tmp.fits','rand_tmp.fits',
+                    n=n,frac=frac,
+                    data_fileout='data_reg.fits',rand_fileout='rand_reg.fits',
+                    figures=True,split_file="jack_splits.txt",countoff=True)
+            os.remove('data_tmp.fits')
+            os.remove('rand_tmp.fits')
+            
+            data=fits.open('data_reg.fits')[1]
+            data=data.data
+            rand=fits.open('rand_reg.fits')[1]
+            rand=rand.data
+            
+        d_fields=np.array(data['reg'])
+        r_fields=np.array(rand['reg'])
+        dtree = twopoint.clustering.tree(dataxyz, d_fields.astype('int'))
+        rtree = twopoint.clustering.tree(randxyz, r_fields.astype('int'))
 
     #MAD Run clustering-tree autocorrelation code
     results = twopoint.angular.autocorr(dtree, rtree, bins,
