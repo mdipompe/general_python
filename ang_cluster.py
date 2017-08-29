@@ -118,12 +118,12 @@ def ang_cluster(data,rand,bins,
     #MAD IF reg column doesn't exist, call IDL code to make them
     if error:
         if (not 'REG' in data.names) or (not 'REG' in rand.names):
-            c1=fits.Column(name='RA', array=data['RA'], format='K')
-            c2=fits.Column(name='DEC', array=data['DEC'], format='K')
+            c1=fits.Column(name='RA', array=data['RA'], format='D')
+            c2=fits.Column(name='DEC', array=data['DEC'], format='D')
             tmp1=fits.BinTableHDU.from_columns([c1,c2])
             tmp1.writeto('data_tmp.fits')
-            c1=fits.Column(name='RA', array=rand['RA'], format='K')
-            c2=fits.Column(name='DEC', array=rand['DEC'], format='K')
+            c1=fits.Column(name='RA', array=rand['RA'], format='D')
+            c2=fits.Column(name='DEC', array=rand['DEC'], format='D')
             tmp2=fits.BinTableHDU.from_columns([c1,c2])
             tmp2.writeto('rand_tmp.fits')
             idl = pidly.IDL()
